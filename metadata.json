@@ -1,0 +1,7 @@
+{
+  "name": "Subtitle Settings Modal",
+  "description": "A modal popup for a browser extension that allows users to configure and preview real-time subtitles.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
