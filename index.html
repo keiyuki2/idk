@@ -15,15 +15,39 @@
     <script src="/public/js/gsap.min.js"></script>
     <script src="/public/js/react-globals.js"></script>
 <style>
-      html, #root {
-        background-color: transparent;
+      html {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
       }
+      
       body {
         font-family: 'Inter', sans-serif;
         background-color: rgba(20, 20, 20, 0.5); /* Blackish, semi-transparent background */
         backdrop-filter: blur(12px); /* Apply a blur effect to the content behind */
         -webkit-backdrop-filter: blur(12px); /* Safari support */
         transition: background-color 0.3s ease, backdrop-filter 0.3s ease; /* Added transition */
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+      
+      #root {
+        height: 100vh;
+        width: 100vw;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 2px solid red !important;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
       }
       
       body.positioning-active {
