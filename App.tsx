@@ -1,7 +1,12 @@
 // Use global React and GSAP from UMD builds
-const React = window.React;
+const React = window.React || {};
 const { useState, useEffect, useRef } = React;
-const gsap = window.gsap;
+const gsap = window.gsap || {};
+
+// Ensure React hooks are available
+if (!useState || !useEffect || !useRef) {
+  console.error('React hooks not available. Make sure React is loaded properly.');
+}
 
 import { Settings, SavedPreset } from './types';
 import Modal from './components/Modal';
