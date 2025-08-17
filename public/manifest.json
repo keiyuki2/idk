@@ -20,7 +20,7 @@
     "<all_urls>"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self' https://esm.sh; object-src 'self'"
+    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }
 
