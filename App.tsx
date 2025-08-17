@@ -655,7 +655,7 @@ const App: React.FC = () => {
           text={liveText}
           onStop={stopLiveTranscription}
         />
-      )}StopLive} />}
+      )}
 
       <SavePresetConfirmationModal
         isOpen={isSaveConfirmationOpen}
