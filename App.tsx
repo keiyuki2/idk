@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Settings, SavedPreset } from './types';
 import Modal from './components/Modal';
-import { GoogleSpeechToTextService } from './api/googleSpeechToText';
-import { VoskSpeechToTextService } from './api/voskSpeechToText';
+import { GoogleSpeechToTextService } from './src/api/googleSpeechToText';
+import { VoskSpeechToTextService } from './src/api/voskSpeechToText';
 import { BookmarkIcon } from './components/icons';
 import PositioningGuide from './components/PositioningGuide';
 import LiveSubtitleBox from './components/LiveSubtitleBox';
