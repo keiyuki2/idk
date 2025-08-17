@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+// Use global React and GSAP from UMD builds
+const React = window.React;
+const { useState, useEffect, useRef } = React;
+const gsap = window.gsap;
+
 import { Settings, SavedPreset } from './types';
 import Modal from './components/Modal';
 import { GoogleSpeechToTextService } from './src/api/googleSpeechToText';
@@ -7,7 +11,6 @@ import { BookmarkIcon } from './components/icons';
 import PositioningGuide from './components/PositioningGuide';
 import LiveSubtitleBox from './components/LiveSubtitleBox';
 import { PresetPreview, ExpandedDetails } from './components/PresetDetails';
-import { gsap } from 'gsap';
 
 // --- SavePresetConfirmationModal Component Definition ---
 interface SavePresetConfirmationModalProps {

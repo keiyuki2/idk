@@ -1,6 +1,8 @@
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+// Use global React and ReactDOM from UMD builds
+const React = window.React;
+const ReactDOM = window.ReactDOM;
+
 import App from './App';
 
 const rootElement = document.getElementById('root');
@@ -10,7 +12,7 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  React.createElement(React.StrictMode, null,
+    React.createElement(App)
+  )
 );
