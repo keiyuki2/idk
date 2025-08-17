@@ -1,18 +1,19 @@
 
-// Use global React and ReactDOM from UMD builds
-const React = window.React || {};
-const ReactDOM = window.ReactDOM || {};
-
-// Wait for fonts to load before initializing React
+// Wait for React to be ready before initializing the app
 async function initializeApp() {
-  // Wait for fonts to load
-  if (document.fonts && document.fonts.ready) {
-    await document.fonts.ready;
+  // Wait for React to be ready
+  if (!window.reactReady) {
+    await new Promise(resolve => {
+      window.addEventListener('reactReady', resolve, { once: true });
+    });
   }
-  
-  // Ensure React is available
-  if (!React.createElement || !ReactDOM.createRoot) {
-    console.error('React or ReactDOM not available. Make sure scripts are loaded properly.');
+
+  const React = window.React;
+  const ReactDOM = window.ReactDOM;
+
+  // Double-check React is available
+  if (!React || !ReactDOM || !React.createElement || !ReactDOM.createRoot) {
+    console.error('React or ReactDOM still not available after waiting.');
     return;
   }
 
@@ -31,9 +32,5 @@ async function initializeApp() {
   );
 }
 
-// Initialize the app when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-  initializeApp();
-}
+// Initialize the app
+initializeApp().catch(console.error);
