@@ -212,7 +212,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const service = new VoskSpeechToTextService();
-    setVoskService(service);
+    window.setVoskService(service);
   }, []);
 
   const processingButtonRef = useRef<HTMLButtonElement>(null);
@@ -496,12 +496,12 @@ const App: React.FC = () => {
       scriptProcessor.connect(audioContext.destination);
 
       scriptProcessor.onaudioprocess = (event) => {
-        if (voskService) {
-          voskService.acceptAudio(event.inputBuffer.getChannelData(0));
+        if (window.voskService) {
+          window.voskService.acceptAudio(event.inputBuffer.getChannelData(0));
         }
       };
 
-      voskService?.start((text) => {
+      window.voskService?.start((text) => {
         setLiveText(text);
       });
 
@@ -519,8 +519,8 @@ const App: React.FC = () => {
   };
 
   const stopLiveTranscription = () => {
-    if (voskService) {
-      voskService.stop();
+    if (window.voskService) {
+      window.voskService.stop();
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
