@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Settings, SavedPreset } from './types';
 import Modal from './components/Modal';
@@ -258,6 +257,9 @@ const App: React.FC = () => {
   }, [hasRunLive, leftPanelContent]);
 
   useEffect(() => {
+    // Run animation only when not in positioning mode
+    if (isPositioningMode) return;
+
     const leftPanel = leftPanelRef.current;
     const centerPanel = centerPanelRef.current;
     const rightPanel = rightPanelRef.current;
@@ -308,7 +310,15 @@ const App: React.FC = () => {
         duration: 0.8,
       }, '-=0.5');
     }
-  }, []);
+  }, [isPositioningMode]);
+
+  useEffect(() => {
+    if (isPositioningMode) {
+      document.body.classList.add('positioning-active');
+    } else {
+      document.body.classList.remove('positioning-active');
+    }
+  }, [isPositioningMode]);
 
 
   const handleSetLeftPanel = (contentType: 'appearance' | 'translation' | 'processing') => {
@@ -532,8 +542,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      {!isLive && (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300">
+      {!isLive && !isPositioningMode && (
         <div className="flex flex-col items-center justify-center gap-8">
             <Modal 
               settings={settings} 
@@ -568,7 +578,7 @@ const App: React.FC = () => {
               rightPanelRef={rightPanelRef}
               dockRef={dockRef}
             />
-            <div className={`transition-opacity duration-300 ${isPositioningMode || (leftPanelContent !== 'stats' && leftPanelContent !== 'about') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className={`transition-opacity duration-300 ${(leftPanelContent !== 'stats' && leftPanelContent !== 'about') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 <button
                     onClick={handleSavePreset}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform hover:scale-105"

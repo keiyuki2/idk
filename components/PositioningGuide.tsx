@@ -162,140 +162,76 @@ const PositioningGuide: React.FC<PositioningGuideProps> = ({ settings, setSettin
         window.removeEventListener('mouseup', handleMouseUp);
     };
 
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-          if (event.key === 'Escape') {
-            onClose();
-          }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClose]);
-
     const rgb = hexToRgb(settings.boxColor);
     const backgroundColor = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${settings.boxOpacity})` : settings.boxColor;
 
-    const fontFamilies = {
-        sans: "'Inter', sans-serif",
-        serif: 'serif',
-        mono: 'monospace',
-    };
-
-    const textShadows = {
-        none: 'none',
-        subtle: '1px 1px 3px rgba(0, 0, 0, 0.6)',
-        outline: 'rgb(0, 0, 0) 1px 0px 1px, rgb(0, 0, 0) 0px 1px 1px, rgb(0, 0, 0) -1px 0px 1px, rgb(0, 0, 0) 0px -1px 1px',
-    };
-
-    const boxStyle: React.CSSProperties = {
-        top: `${settings.boxPosition.top}%`,
-        left: `${settings.boxPosition.left}%`,
-        width: `${settings.boxPosition.width}%`,
-        height: `${settings.boxPosition.height}%`,
-        backgroundColor,
-        outline: '2px dashed #3B82F6',
-        outlineOffset: '2px',
-        cursor: 'move',
-        transition: 'background-color 0.3s ease, color 0.3s ease',
-    };
-
-    const textStyle: React.CSSProperties = {
-        color: settings.textColor,
-        fontSize: `${settings.fontSize}px`,
-        fontFamily: fontFamilies[settings.fontFamily],
-        fontWeight: settings.isBold ? 'bold' : 'normal',
-        fontStyle: settings.isItalic ? 'italic' : 'normal',
-        textShadow: textShadows[settings.textShadow],
-        pointerEvents: 'none',
-        userSelect: 'none'
-    };
-    
-    const resizeHandles = ['top', 'right', 'bottom', 'left', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
-    const handleClasses: {[key: string]: string} = {
-        'top': 'cursor-ns-resize h-2 -top-1 left-0 w-full',
-        'bottom': 'cursor-ns-resize h-2 -bottom-1 left-0 w-full',
-        'left': 'cursor-ew-resize w-2 -left-1 top-0 h-full',
-        'right': 'cursor-ew-resize w-2 -right-1 top-0 h-full',
-        'top-left': 'cursor-nwse-resize w-4 h-4 -top-2 -left-2',
-        'top-right': 'cursor-nesw-resize w-4 h-4 -top-2 -right-2',
-        'bottom-left': 'cursor-nesw-resize w-4 h-4 -bottom-2 -left-2',
-        'bottom-right': 'cursor-nwse-resize w-4 h-4 -bottom-2 -right-2',
-    };
-
-    const showToolbar = isToolbarPinned || isMouseAtTop;
+    useEffect(() => {
+        const mouseMoveHandler = (e: MouseEvent) => {
+            if (isToolbarPinned) return;
+            setIsMouseAtTop(e.clientY < 80);
+        };
+        window.addEventListener('mousemove', mouseMoveHandler);
+        return () => window.removeEventListener('mousemove', mouseMoveHandler);
+    }, [isToolbarPinned]);
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" style={{animation: 'fadeIn 0.2s ease'}}>
-            <style>{`
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-            `}</style>
-            
-            <div 
-                className="fixed top-0 left-0 right-0 h-16 z-[59] cursor-default"
-                onMouseEnter={() => setIsMouseAtTop(true)}
-                onMouseLeave={() => setIsMouseAtTop(false)}
-            />
-            
-            <div
-                className="w-full"
-                style={{
-                    position: 'fixed', top: 0, left: 0, zIndex: 60, display: 'flex', justifyContent: 'center',
-                    transform: showToolbar ? 'translateY(0)' : 'translateY(-120%)',
-                    transition: 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                    pointerEvents: 'none'
-                }}
-                onMouseEnter={() => setIsMouseAtTop(true)}
-                onMouseLeave={() => setIsMouseAtTop(false)}
-            >
-                <div style={{ pointerEvents: 'auto' }}>
-                    <PositioningToolbar 
-                       settings={settings}
-                       setSettings={setSettings}
-                       isPinned={isToolbarPinned}
-                       onPinToggle={() => setIsToolbarPinned(p => !p)}
-                    />
-                </div>
+        <div 
+            className="fixed inset-0 z-50 bg-transparent"
+        >
+            <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[70] transition-all duration-300 ${isToolbarPinned || isMouseAtTop ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'}`}>
+                <PositioningToolbar settings={settings} setSettings={setSettings} isPinned={isToolbarPinned} onPinToggle={() => setIsToolbarPinned(!isToolbarPinned)} />
             </div>
-            
+
             <div
                 ref={boxRef}
-                style={boxStyle}
-                className="fixed rounded-md"
+                className="fixed border-2 border-dashed border-blue-400/80 rounded-lg shadow-2xl group"
+                style={{
+                    top: `${settings.boxPosition.top}%`,
+                    left: `${settings.boxPosition.left}%`,
+                    width: `${settings.boxPosition.width}%`,
+                    height: `${settings.boxPosition.height}%`,
+                    backgroundColor: backgroundColor,
+                    cursor: 'move',
+                    transition: 'background-color 0.2s ease',
+                }}
                 onMouseDown={(e) => handleMouseDown(e)}
             >
-                <div className="w-full h-full flex items-center justify-center p-2">
-                    <p style={textStyle} className="text-center">
-                        Drag to move, or drag edges to resize.
-                    </p>
+                <div 
+                    className="absolute inset-0 p-2 flex items-center justify-center text-center select-none"
+                    style={{
+                        color: settings.textColor,
+                        fontSize: `${settings.fontSize}px`,
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+                        transition: 'color 0.2s ease, font-size 0.2s ease',
+                    }}
+                >
+                    <p>This is a preview of your subtitle position and style. <br/> Drag the edges to resize or the body to move.</p>
                 </div>
 
-                {resizeHandles.map(handle => (
-                    <div
-                        key={handle}
-                        className={`absolute z-10`}
-                        style={{
-                            ... (handle.includes('top') && { top: '-4px' }),
-                            ... (handle.includes('bottom') && { bottom: '-4px' }),
-                            ... (handle.includes('left') && { left: '-4px' }),
-                            ... (handle.includes('right') && { right: '-4px' }),
-                            ... (!handle.includes('top') && !handle.includes('bottom') && {top: 0, height: '100%'}),
-                            ... (!handle.includes('left') && !handle.includes('right') && {left: 0, width: '100%'}),
-                        }}
-                    >
-                         <div
-                            className={`w-full h-full ${handleClasses[handle]}`}
-                             onMouseDown={(e) => handleMouseDown(e, handle)}
-                        />
-                    </div>
-                ))}
+                {/* Resize Handles */}
+                <div onMouseDown={(e) => handleMouseDown(e, 'top-left')} className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white rounded-full border-2 border-blue-500 cursor-nwse-resize"></div>
+                <div onMouseDown={(e) => handleMouseDown(e, 'top-right')} className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white rounded-full border-2 border-blue-500 cursor-nesw-resize"></div>
+                <div onMouseDown={(e) => handleMouseDown(e, 'bottom-left')} className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white rounded-full border-2 border-blue-500 cursor-nesw-resize"></div>
+                <div onMouseDown={(e) => handleMouseDown(e, 'bottom-right')} className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white rounded-full border-2 border-blue-500 cursor-nwse-resize"></div>
+                
+                <div onMouseDown={(e) => handleMouseDown(e, 'top')} className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-2 bg-white rounded-full border border-blue-500 cursor-n-resize group-hover:opacity-100 opacity-0 transition-opacity"></div>
+                <div onMouseDown={(e) => handleMouseDown(e, 'bottom')} className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-2 bg-white rounded-full border border-blue-500 cursor-s-resize group-hover:opacity-100 opacity-0 transition-opacity"></div>
+                <div onMouseDown={(e) => handleMouseDown(e, 'left')} className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-8 bg-white rounded-full border border-blue-500 cursor-w-resize group-hover:opacity-100 opacity-0 transition-opacity"></div>
+                <div onMouseDown={(e) => handleMouseDown(e, 'right')} className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-8 bg-white rounded-full border border-blue-500 cursor-e-resize group-hover:opacity-100 opacity-0 transition-opacity"></div>
+                
             </div>
             
-            <button
-                onClick={onClose}
-                className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[60] bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-xl transition-transform hover:scale-105"
+            <div 
+                className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] transition-opacity duration-300"
+                onClick={e => e.stopPropagation()}
             >
-                Done
-            </button>
+                <button
+                    onClick={onClose}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-transform hover:scale-105"
+                >
+                    Done
+                </button>
+            </div>
         </div>
     );
 };

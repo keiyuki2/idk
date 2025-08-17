@@ -35,10 +35,23 @@
 }
 </script>
 <style>
+      html, #root {
+        background-color: transparent;
+      }
       body {
         font-family: 'Inter', sans-serif;
+        background-color: rgba(20, 20, 20, 0.5); /* Blackish, semi-transparent background */
+        backdrop-filter: blur(12px); /* Apply a blur effect to the content behind */
+        -webkit-backdrop-filter: blur(12px); /* Safari support */
+        transition: background-color 0.3s ease, backdrop-filter 0.3s ease; /* Added transition */
       }
       
+      body.positioning-active {
+        background-color: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
       /* Custom styles for range input */
       input[type=range] {
         -webkit-appearance: none;
@@ -172,8 +185,7 @@
           z-index: 50;
       }
 </style>
-  <link rel="stylesheet" href="/index.css">
-</head>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
