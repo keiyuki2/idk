@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Settings } from '../types';
 import { StopCircleIcon } from './icons';
+import { SpeechRecognitionService } from '../src/speechRecognition';
 
 interface LiveSubtitleBoxProps {
     settings: Settings;
@@ -19,6 +20,35 @@ const hexToRgb = (hex: string): {r: number, g: number, b: number} | null => {
 };
 
 const LiveSubtitleBox: React.FC<LiveSubtitleBoxProps> = ({ settings, text, onStop }) => {
+  const [liveText, setLiveText] = useState("");
+  const [speechService, setSpeechService] = useState<SpeechRecognitionService | null>(null);
+
+  useEffect(() => {
+    if (settings.processingMode === 'realtime') {
+      const service = new SpeechRecognitionService();
+      setSpeechService(service);
+
+      if (service.recognition) {
+        service.start(
+          (transcript) => {
+            setLiveText(transcript);
+          },
+          () => {
+            console.log('Speech recognition ended.');
+            // Optionally restart or handle end of speech
+          }
+        );
+      }
+
+      return () => {
+        if (service) {
+          service.stop();
+        }
+      };
+    } else {
+      setLiveText(text); // Use passed text for other modes
+    }
+  }, [settings.processingMode, text]);
     const rgb = hexToRgb(settings.boxColor);
     const backgroundColor = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${settings.boxOpacity})` : settings.boxColor;
 

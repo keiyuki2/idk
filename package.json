@@ -13,12 +13,14 @@
     "react": "^19.1.1",
     "@google/genai": "latest",
     "gsap": "^3.13.0",
-    "gsap/ScrollTrigger": "latest",
-    "gsap/SplitText": "latest"
+    "vosk-browser": "^0.0.7"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@types/dom-webcodecs": "^0.1.10",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
 }
+
+

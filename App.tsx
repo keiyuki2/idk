@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Settings, SavedPreset } from './types';
 import Modal from './components/Modal';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleSpeechToTextService } from './api/googleSpeechToText';
+import { VoskSpeechToTextService } from './api/voskSpeechToText';
 import { BookmarkIcon } from './components/icons';
 import PositioningGuide from './components/PositioningGuide';
 import LiveSubtitleBox from './components/LiveSubtitleBox';
@@ -205,6 +206,14 @@ const App: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const liveRequestInFlight = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserNodeRef = useRef<AnalyserNode | null>(null);
+  const scriptProcessorNodeRef = useRef<ScriptProcessorNode | null>(null);
+
+  useEffect(() => {
+    const service = new VoskSpeechToTextService();
+    setVoskService(service);
+  }, []);
 
   const processingButtonRef = useRef<HTMLButtonElement>(null);
   const translationButtonRef = useRef<HTMLButtonElement>(null);
@@ -373,17 +382,14 @@ const App: React.FC = () => {
             throw new Error("API Key is missing. Please add it in the Processing settings.");
           }
 
-          const ai = new GoogleGenAI({ apiKey: settings.apiKey });
-          const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: { 
-              parts: [
-                { text: buildPrompt() }, 
-                { inlineData: { mimeType: file.type, data: base64Data } }
-              ] 
-            }
-          });
-          setGeneratedText(response.text);
+          const speechToTextService = new GoogleSpeechToTextService(settings.apiKey);
+          const transcription = await speechToTextService.transcribeAudio(
+            file,
+            settings.sourceLanguage,
+            settings.translationEnabled,
+            settings.translationLanguage
+          );
+          setGeneratedText(transcription);
         } catch (err: any) {
           console.error("Error generating subtitles:", err);
           const errorMessage = err.message || "Sorry, subtitle generation failed. Please check the console for details.";
@@ -404,17 +410,30 @@ const App: React.FC = () => {
   const handleGenerateClick = async () => {
     if (isGenerating) return;
 
-    if (!settings.apiKey && settings.processingMode === 'api') {
-      alert("Please enter your API Key in the Processing settings.");
-      setLeftPanelContent('processing');
-      return;
+    if (settings.processingMode === 'api') {
+      if (!settings.apiKey) {
+        alert("Please enter your API Key in the Processing settings.");
+        setLeftPanelContent("processing");
+        return;
+      }
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "audio/*,video/*";
+      input.onchange = (e) => handleFileSelect(e as unknown as React.ChangeEvent<HTMLInputElement>);
+      input.click();
+    } else if (settings.processingMode === 'private') {
+      if (isLive) {
+        stopLiveTranscription();
+      } else {
+        startLiveTranscription();
+      }
+    } else if (settings.processingMode === 'realtime') {
+      // This mode will use the Web Speech API directly, which is handled in LiveSubtitleBox.tsx
+      // For now, we'll just toggle the isLive state.
+      setIsLive(prev => !prev);
+      setHasRunLive(true);
+      setLiveText("Listening...");
     }
-    
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'audio/*,video/*';
-    input.onchange = (e) => handleFileSelect(e as unknown as React.ChangeEvent<HTMLInputElement>);
-    input.click();
   };
 
   const handleSavePreset = () => {
@@ -462,10 +481,56 @@ const App: React.FC = () => {
         return !prev;
     });
   };
+  const startLiveTranscription = async () => {
+    if (isLive) return;
 
-  const handleStopLive = () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-        mediaRecorderRef.current.stop();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      const scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+
+      source.connect(analyser);
+      analyser.connect(scriptProcessor);
+      scriptProcessor.connect(audioContext.destination);
+
+      scriptProcessor.onaudioprocess = (event) => {
+        if (voskService) {
+          voskService.acceptAudio(event.inputBuffer.getChannelData(0));
+        }
+      };
+
+      voskService?.start((text) => {
+        setLiveText(text);
+      });
+
+      audioContextRef.current = audioContext;
+      analyserNodeRef.current = analyser;
+      scriptProcessorNodeRef.current = scriptProcessor;
+
+      setIsLive(true);
+      setHasRunLive(true);
+      setLiveText("Listening...");
+    } catch (error) {
+      console.error("Error starting live transcription:", error);
+      setError("Could not start microphone. Please check permissions.");
+    }
+  };
+
+  const stopLiveTranscription = () => {
+    if (voskService) {
+      voskService.stop();
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+    }
+    if (scriptProcessorNodeRef.current) {
+      scriptProcessorNodeRef.current.disconnect();
+    }
+    setIsLive(false);
+    setLiveText("");
+  };iaRecorderRef.current.stop();
       }
       setIsLive(false);
       setLiveText("");
@@ -589,7 +654,13 @@ const App: React.FC = () => {
         </div>
       )}
       {isPositioningMode && <PositioningGuide settings={settings} setSettings={setSettings} onClose={() => setIsPositioningMode(false)} />}
-      {isLive && <LiveSubtitleBox settings={settings} text={liveText} onStop={handleStopLive} />}
+      {isLive && (
+        <LiveSubtitleBox
+          settings={settings}
+          text={liveText}
+          onStop={stopLiveTranscription}
+        />
+      )}StopLive} />}
 
       <SavePresetConfirmationModal
         isOpen={isSaveConfirmationOpen}
