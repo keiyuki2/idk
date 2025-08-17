@@ -530,11 +530,6 @@ const App: React.FC = () => {
     }
     setIsLive(false);
     setLiveText("");
-  };iaRecorderRef.current.stop();
-      }
-      setIsLive(false);
-      setLiveText("");
-      mediaRecorderRef.current = null;
   };
 
   const handleLiveClick = async () => {
