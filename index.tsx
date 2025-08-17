@@ -17,18 +17,18 @@ async function initializeApp() {
     return;
   }
 
-  const { default: App } = await import('./App');
+  // Use simple app for testing
+  const { default: SimpleApp } = await import('./SimpleApp');
 
   const rootElement = document.getElementById('root');
   if (!rootElement) {
     throw new Error("Could not find root element to mount to");
   }
 
+  console.log('Rendering SimpleApp...');
   const root = ReactDOM.createRoot(rootElement);
   root.render(
-    React.createElement(React.StrictMode, null,
-      React.createElement(App)
-    )
+    React.createElement(SimpleApp)
   );
 }
 

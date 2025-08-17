@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug React</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        #root {
+            min-height: 400px;
+            border: 2px solid red;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug React Loading</h1>
+    <div id="root">Loading...</div>
+    
+    <script src="/public/js/react.production.min.js"></script>
+    <script src="/public/js/react-dom.production.min.js"></script>
+    
+    <script>
+        console.log('React:', window.React);
+        console.log('ReactDOM:', window.ReactDOM);
+        
+        if (window.React && window.ReactDOM) {
+            const React = window.React;
+            const ReactDOM = window.ReactDOM;
+            
+            function TestComponent() {
+                return React.createElement('div', {
+                    style: { 
+                        padding: '20px', 
+                        backgroundColor: '#f0f0f0',
+                        border: '1px solid #ccc',
+                        borderRadius: '8px'
+                    }
+                }, 
+                    React.createElement('h2', null, 'React is working!'),
+                    React.createElement('p', null, 'This is a test component to verify React is rendering correctly.'),
+                    React.createElement('button', {
+                        onClick: () => alert('Button clicked!')
+                    }, 'Test Button')
+                );
+            }
+            
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(React.createElement(TestComponent));
+        } else {
+            document.getElementById('root').innerHTML = 'React or ReactDOM not available';
+        }
+    </script>
+</body>
+</html>
+
