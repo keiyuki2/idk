@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),
-          background: resolve(__dirname, 'src/background.ts'), // Add background script as an entry point
-          // Add other entry points if necessary, e.g., content.ts
+          background: resolve(__dirname, 'src/background.ts'),
+          'content-script': resolve(__dirname, 'src/content-script.ts'), // Add content script as an entry point
         },
         output: {
           entryFileNames: `[name].js`,

@@ -1,5 +1,12 @@
-// This is a placeholder for the background script.
-// It can be used for event listeners, long-running tasks, etc.
-console.log("Background script loaded.");
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.id) {
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["content-script.js"],
+    }, () => {
+      chrome.tabs.sendMessage(tab.id!, { action: "toggleOverlay" });
+    });
+  }
+});
 
 
