@@ -17,16 +17,17 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),
-          // Add other entry points if necessary, e.g., background.ts, content.ts
+          background: resolve(__dirname, 'src/background.ts'), // Add background script as an entry point
+          // Add other entry points if necessary, e.g., content.ts
         },
         output: {
-          entryFileNames: `assets/[name].js`,
+          entryFileNames: `[name].js`,
           chunkFileNames: `assets/[name].js`,
           assetFileNames: `assets/[name].[ext]`,
         },
       },
     },
-    publicDir: resolve(__dirname, './public'), // Assuming manifest.json is in a 'public' folder
+    publicDir: resolve(__dirname, './public'),
   };
 });
 
