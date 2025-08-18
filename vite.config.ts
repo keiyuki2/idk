@@ -16,9 +16,8 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         input: {
-          main: resolve(__dirname, 'index.html'),
-          background: resolve(__dirname, 'src/background.ts'),
-          'content-script': resolve(__dirname, 'src/content-script.tsx'),
+          main: resolve(__dirname, "index.html"),
+          background: resolve(__dirname, "src/background.ts"),
         },
         external: ['react', 'react-dom'],
         output: {

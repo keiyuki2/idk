@@ -1,5 +1,3 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
 import App from '../App';
 
 const injectApp = () => {
@@ -77,11 +75,11 @@ const injectApp = () => {
 
   document.body.appendChild(overlay);
 
-  const root = ReactDOM.createRoot(reactRoot);
+  const root = window.ReactDOM.createRoot(reactRoot);
   root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
+    window.React.createElement(window.React.StrictMode,
+      window.React.createElement(App)
+    )
   );
 
   document.addEventListener('keydown', function(e) {
