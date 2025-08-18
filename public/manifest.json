@@ -25,7 +25,6 @@
     {
       "resources": [
         "public/js/*.js",
-        "*.tsx",
         "index.html"
       ],
       "matches": ["<all_urls>"]
