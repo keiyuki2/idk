@@ -25,7 +25,7 @@
     {
       "resources": [
         "public/js/*.js",
-        "*.js",
+        "content-script.js",
         "*.tsx",
         "index.html"
       ],

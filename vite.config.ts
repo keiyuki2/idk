@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
         input: {
           main: resolve(__dirname, 'index.html'),
           background: resolve(__dirname, 'src/background.ts'),
-          'content-script': resolve(__dirname, 'src/content-script.ts'), // Add content script as an entry point
+          'content-script': resolve(__dirname, 'src/content-script.tsx'),
         },
         output: {
           entryFileNames: `[name].js`,
