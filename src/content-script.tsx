@@ -5,12 +5,10 @@ import App from '../App';
 const injectApp = () => {
   const existingContainer = document.getElementById('subtitle-extension-root');
   if (existingContainer) {
-    // If container already exists, toggle its visibility
     existingContainer.style.display = existingContainer.style.display === 'none' ? 'block' : 'none';
     return;
   }
 
-  // Create the overlay container
   const overlay = document.createElement('div');
   overlay.id = 'subtitle-extension-overlay';
   overlay.style.cssText = `
@@ -29,7 +27,6 @@ const injectApp = () => {
     font-family: 'Inter', sans-serif;
   `;
 
-  // Create the main content container
   const contentContainer = document.createElement('div');
   contentContainer.id = 'subtitle-extension-content';
   contentContainer.style.cssText = `
@@ -43,7 +40,6 @@ const injectApp = () => {
     position: relative;
   `;
 
-  // Create close button
   const closeButton = document.createElement('button');
   closeButton.innerHTML = '×';
   closeButton.style.cssText = `
@@ -68,30 +64,26 @@ const injectApp = () => {
     overlay.remove();
   });
 
-  // Create the React root container
-  const container = document.createElement('div');
-  container.id = 'subtitle-extension-root';
-  container.style.cssText = `
+  const reactRoot = document.createElement('div');
+  reactRoot.id = 'subtitle-extension-root';
+  reactRoot.style.cssText = `
     min-height: 400px;
     min-width: 600px;
   `;
 
-  // Assemble the overlay
   contentContainer.appendChild(closeButton);
-  contentContainer.appendChild(container);
+  contentContainer.appendChild(reactRoot);
   overlay.appendChild(contentContainer);
 
-  // Add to page
   document.body.appendChild(overlay);
 
-  const root = ReactDOM.createRoot(container);
+  const root = ReactDOM.createRoot(reactRoot);
   root.render(
     <React.StrictMode>
       <App />
     </React.StrictMode>
   );
 
-  // Handle ESC key to close overlay
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && document.getElementById('subtitle-extension-overlay')) {
       overlay.remove();
@@ -99,7 +91,4 @@ const injectApp = () => {
   });
 };
 
-// Execute immediately when content script is loaded
 injectApp();
-
-

@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
           background: resolve(__dirname, 'src/background.ts'),
           'content-script': resolve(__dirname, 'src/content-script.tsx'),
         },
+        external: ['react', 'react-dom'],
         output: {
           entryFileNames: `[name].js`,
           chunkFileNames: `assets/[name].js`,
