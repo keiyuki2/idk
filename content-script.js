@@ -26,65 +26,19 @@
     font-family: 'Inter', sans-serif;
   `;
 
-  // Create the main content container
-  const contentContainer = document.createElement('div');
-  contentContainer.id = 'subtitle-extension-content';
-  contentContainer.style.cssText = `
-    background: white;
-    border-radius: 12px;
-    padding: 40px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow: auto;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    position: relative;
-  `;
-
-  // Create close button
-  const closeButton = document.createElement('button');
-  closeButton.innerHTML = '×';
-  closeButton.style.cssText = `
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    background: none;
-    border: none;
-    font-size: 30px;
-    cursor: pointer;
-    color: #666;
-    line-height: 1;
-    padding: 0;
-    width: 30px;
-    height: 30px;
+  // Create the React root container
+  const reactRoot = document.createElement("div");
+  reactRoot.id = "subtitle-extension-root";
+  reactRoot.style.cssText = `
+    width: 100vw;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
   `;
 
-  closeButton.addEventListener('click', function() {
-    overlay.remove();
-  });
-
-  // Create the React root container
-  const reactRoot = document.createElement('div');
-  reactRoot.id = 'subtitle-extension-root';
-  reactRoot.style.cssText = `
-    min-height: 400px;
-    min-width: 600px;
-  `;
-
-  // Add initial loading message
-  reactRoot.innerHTML = `
-    <div style="text-align: center; padding: 40px;">
-      <h2 style="margin: 0 0 20px 0; color: #333;">Subtitle Settings</h2>
-      <p style="color: #666;">Loading extension...</p>
-    </div>
-  `;
-
   // Assemble the overlay
-  contentContainer.appendChild(closeButton);
-  contentContainer.appendChild(reactRoot);
-  overlay.appendChild(contentContainer);
+  overlay.appendChild(reactRoot);
 
   // Add to page
   document.body.appendChild(overlay);
@@ -146,15 +100,15 @@
     }
 
     // Load and render the main App component
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('App.js');
+    const script = document.createElement("script");
+    script.src = chrome.runtime.getURL("App.js");
     script.onload = function() {
       if (window.App) {
         const root = ReactDOM.createRoot(reactRoot);
         root.render(React.createElement(window.App));
       } else {
         // Import the App component dynamically
-        import(chrome.runtime.getURL('App.js')).then(module => {
+        import(chrome.runtime.getURL("App.js")).then(module => {
           const App = module.default;
           const root = ReactDOM.createRoot(reactRoot);
           root.render(React.createElement(App));
@@ -170,7 +124,7 @@
       }
     };
     script.onerror = function() {
-      // Fallback if App.js doesn't load
+      // Fallback if App.js doesn\'t load
       reactRoot.innerHTML = `
         <div style="text-align: center; padding: 40px;">
           <h2>Subtitle Extension</h2>
@@ -180,8 +134,6 @@
     };
     document.head.appendChild(script);
   }
-
-  // Handle ESC key to close overlay
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && document.getElementById('subtitle-extension-overlay')) {
       overlay.remove();
