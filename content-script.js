@@ -145,63 +145,38 @@
       return;
     }
 
-    // Load and render the SimpleApp for testing
+    // Load and render the main App component
     const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('SimpleApp.js');
+    script.src = chrome.runtime.getURL('App.js');
     script.onload = function() {
-      if (window.SimpleApp) {
+      if (window.App) {
         const root = ReactDOM.createRoot(reactRoot);
-        root.render(React.createElement(window.SimpleApp));
+        root.render(React.createElement(window.App));
       } else {
-        // Fallback: create a simple test component
-        const TestComponent = () => {
-          return React.createElement('div', {
-            style: { textAlign: 'center', padding: '20px' }
-          },
-            React.createElement('h2', null, 'Subtitle Extension Loaded!'),
-            React.createElement('p', null, 'The extension is working correctly.'),
-            React.createElement('button', {
-              onClick: () => alert('Extension is functional!'),
-              style: {
-                padding: '10px 20px',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }
-            }, 'Test Button')
-          );
-        };
-
-        const root = ReactDOM.createRoot(reactRoot);
-        root.render(React.createElement(TestComponent));
+        // Import the App component dynamically
+        import(chrome.runtime.getURL('App.js')).then(module => {
+          const App = module.default;
+          const root = ReactDOM.createRoot(reactRoot);
+          root.render(React.createElement(App));
+        }).catch(() => {
+          // Final fallback
+          reactRoot.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+              <h2>Subtitle Extension</h2>
+              <p>Extension loaded successfully!</p>
+            </div>
+          `;
+        });
       }
     };
     script.onerror = function() {
-      // Fallback if SimpleApp.js doesn't load
-      const TestComponent = () => {
-        return React.createElement('div', {
-          style: { textAlign: 'center', padding: '20px' }
-        },
-          React.createElement('h2', null, 'Subtitle Extension Loaded!'),
-          React.createElement('p', null, 'The extension is working correctly.'),
-          React.createElement('button', {
-            onClick: () => alert('Extension is functional!'),
-            style: {
-              padding: '10px 20px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }
-          }, 'Test Button')
-        );
-      };
-
-      const root = ReactDOM.createRoot(reactRoot);
-      root.render(React.createElement(TestComponent));
+      // Fallback if App.js doesn't load
+      reactRoot.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <h2>Subtitle Extension</h2>
+          <p>Extension loaded successfully!</p>
+        </div>
+      `;
     };
     document.head.appendChild(script);
   }
