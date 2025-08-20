@@ -1,36 +1,21 @@
-// Content script to inject the full-screen subtitle UI
+// Simple content script with no React dependencies
 (function() {
   'use strict';
   
   console.log('Subtitle extension content script loaded');
-  
-  // Keep track of UI state
-  let isUIVisible = false;
-  
-  // Toggle the UI
-  function toggleUI() {
-    const overlay = document.getElementById('subtitle-extension-overlay');
-    
-    // Remove existing UI if it exists
-    if (overlay) {
-      overlay.remove();
-      isUIVisible = false;
-      return;
-    }
-    
-    // Otherwise create the UI
-    createUI();
-    isUIVisible = true;
-  }
-  
-  // Create the UI
-  function createUI() {
+
+  // Create and show the UI
+  function createAndShowUI() {
     // Check if the overlay is already injected
     if (document.getElementById('subtitle-extension-overlay')) {
+      console.log('UI already exists, removing it');
+      document.getElementById('subtitle-extension-overlay').remove();
       return;
     }
   
-    // Create the overlay container
+    console.log('Creating UI elements');
+    
+    // Create the overlay container with blurry backdrop
     const overlay = document.createElement('div');
     overlay.id = 'subtitle-extension-overlay';
     overlay.style.cssText = `
@@ -49,185 +34,142 @@
       font-family: 'Inter', sans-serif;
     `;
   
-    // Create the React root container
-    const reactRoot = document.createElement("div");
-    reactRoot.id = "subtitle-extension-root";
-    reactRoot.style.cssText = `
-      width: 100vw;
-      height: 100vh;
+    // Create the white box content container
+    const content = document.createElement('div');
+    content.id = 'subtitle-extension-content';
+    content.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+    `;
+  
+    // Create a close button
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 30px;
+      cursor: pointer;
+      color: #666;
+      line-height: 1;
+      padding: 0;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
     `;
-  
-    // Add a loading indicator
-    const loadingIndicator = document.createElement('div');
-    loadingIndicator.style.cssText = `
-      text-align: center;
+
+    // Add click handler to close button
+    closeBtn.addEventListener('click', function() {
+      overlay.remove();
+    });
+
+    // Create a subtitle interface
+    const subtitleUI = document.createElement('div');
+    subtitleUI.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 500px;
+    `;
+    
+    // Add a header
+    const header = document.createElement('div');
+    header.innerHTML = `
+      <h1 style="font-size: 24px; margin: 0 0 10px 0; color: #007bff;">🎙️ Subtitle Extension</h1>
+      <p style="font-size: 16px; margin: 0; color: #666;">Real-time subtitle overlay</p>
+    `;
+
+    // Add a preview area
+    const previewArea = document.createElement('div');
+    previewArea.style.cssText = `
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      margin: 15px 0;
+    `;
+    previewArea.innerHTML = `
+      <p style="font-size: 18px; margin: 0; color: #333;">
+        This is what your subtitles will look like. Adjust the settings to see the changes live.
+      </p>
+    `;
+
+    // Add a settings area
+    const settings = document.createElement('div');
+    settings.innerHTML = `
+      <h2 style="font-size: 18px; margin: 0 0 15px 0;">Settings</h2>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Background Color</label>
+        <div style="display: flex; gap: 10px;">
+          <button style="padding: 10px; background: #000; border: 2px solid #000; border-radius: 4px; cursor: pointer;"></button>
+          <button style="padding: 10px; background: #333; border: 2px solid #ccc; border-radius: 4px; cursor: pointer;"></button>
+          <button style="padding: 10px; background: #0057b7; border: 2px solid #ccc; border-radius: 4px; cursor: pointer;"></button>
+        </div>
+      </div>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: 500;">Text Color</label>
+        <div style="display: flex; gap: 10px;">
+          <button style="padding: 10px; background: #fff; border: 2px solid #000; border-radius: 4px; cursor: pointer;"></button>
+          <button style="padding: 10px; background: #ffd700; border: 2px solid #ccc; border-radius: 4px; cursor: pointer;"></button>
+          <button style="padding: 10px; background: #00ff00; border: 2px solid #ccc; border-radius: 4px; cursor: pointer;"></button>
+        </div>
+      </div>
+    `;
+
+    // Add a button
+    const button = document.createElement('button');
+    button.textContent = 'Start Live Subtitles';
+    button.style.cssText = `
+      padding: 12px 24px;
+      background-color: #007bff;
       color: white;
-      font-size: 18px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 10px;
     `;
-    loadingIndicator.innerHTML = `
-      <div style="width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); 
-                  border-radius: 50%; border-top-color: white; margin: 0 auto 15px;
-                  animation: spin 1s linear infinite;"></div>
-      <p>Loading subtitle extension...</p>
-    `;
+    button.addEventListener('mouseover', function() {
+      this.style.backgroundColor = '#0069d9';
+    });
+    button.addEventListener('mouseout', function() {
+      this.style.backgroundColor = '#007bff';
+    });
     
-    // Add the animation
-    const style = document.createElement('style');
-    style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
-    document.head.appendChild(style);
+    // Assemble the subtitle UI
+    subtitleUI.appendChild(header);
+    subtitleUI.appendChild(previewArea);
+    subtitleUI.appendChild(settings);
+    subtitleUI.appendChild(button);
     
-    reactRoot.appendChild(loadingIndicator);
-  
-    // Assemble the overlay
-    overlay.appendChild(reactRoot);
-  
-    // Add to page
+    // Assemble the final DOM structure
+    content.appendChild(closeBtn);
+    content.appendChild(subtitleUI);
+    overlay.appendChild(content);
     document.body.appendChild(overlay);
   
     // Add keyboard escape handler
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && document.getElementById('subtitle-extension-overlay')) {
-        toggleUI();
+        overlay.remove();
       }
     });
     
-    // Load the extension scripts
-    loadExtensionScripts();
-  }
-  
-  function loadExtensionScripts() {
-    const scripts = [
-      chrome.runtime.getURL('public/js/tailwind.min.js'),
-      chrome.runtime.getURL('public/js/tailwind-config.js'),
-      chrome.runtime.getURL('public/js/global-vars.js'),
-      chrome.runtime.getURL('public/js/react.production.min.js'),
-      chrome.runtime.getURL('public/js/react-dom.production.min.js'),
-      chrome.runtime.getURL('public/js/gsap.min.js'),
-      chrome.runtime.getURL('public/js/react-globals.js')
-    ];
-  
-    let loadedCount = 0;
-  
-    scripts.forEach((src, index) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.onload = function() {
-        loadedCount++;
-        console.log(`Loaded script ${loadedCount}/${scripts.length}: ${src}`);
-        if (loadedCount === scripts.length) {
-          // All scripts loaded, now load the main app
-          loadMainApp();
-        }
-      };
-      script.onerror = function() {
-        console.error('Failed to load script:', src);
-      };
-      document.head.appendChild(script);
-    });
-  }
-  
-  function loadMainApp() {
-    console.log('All dependencies loaded, initializing React app');
-    // Wait for React to be ready
-    if (window.reactReady) {
-      initializeReactApp();
-    } else {
-      window.addEventListener('reactReady', initializeReactApp, { once: true });
-    }
-  }
-  
-  function initializeReactApp() {
-    const React = window.React;
-    const ReactDOM = window.ReactDOM;
-    const reactRoot = document.getElementById('subtitle-extension-root');
-  
-    if (!React || !ReactDOM || !reactRoot) {
-      console.error('React, ReactDOM, or root element not found');
-      if (reactRoot) {
-        reactRoot.innerHTML = `
-          <div style="text-align: center; padding: 40px; color: red;">
-            <h3>Error: React not loaded</h3>
-            <p>Please check the console for errors.</p>
-          </div>
-        `;
-      }
-      return;
-    }
-  
-    console.log('Loading App.js');
-    // First try SimpleApp.js which is simpler and might be more reliable for testing
-    const script = document.createElement("script");
-    script.src = chrome.runtime.getURL("SimpleApp.js");
-    script.onload = function() {
-      console.log('SimpleApp.js loaded, trying to render');
-      if (window.SimpleApp) {
-        try {
-          const root = ReactDOM.createRoot(reactRoot);
-          root.render(React.createElement(window.SimpleApp));
-          console.log('SimpleApp rendered successfully');
-        } catch (error) {
-          console.error('Error rendering SimpleApp:', error);
-          // Fallback to App.js
-          loadAppJS();
-        }
-      } else {
-        console.log('SimpleApp not found, trying App.js');
-        loadAppJS();
-      }
-    };
-    script.onerror = function() {
-      console.error('Failed to load SimpleApp.js');
-      loadAppJS();
-    };
-    document.head.appendChild(script);
-  }
-  
-  function loadAppJS() {
-    const reactRoot = document.getElementById('subtitle-extension-root');
-    if (!reactRoot) return;
-    
-    const script = document.createElement("script");
-    script.src = chrome.runtime.getURL("App.js");
-    script.onload = function() {
-      console.log('App.js loaded, rendering React component');
-      if (window.App) {
-        try {
-          const root = ReactDOM.createRoot(reactRoot);
-          root.render(React.createElement(window.App));
-          console.log('App component rendered successfully');
-        } catch (error) {
-          console.error('Error rendering App component:', error);
-          reactRoot.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: white;">
-              <h2>Subtitle Extension</h2>
-              <p style="color: red;">Error loading component: ${error.message}</p>
-            </div>
-          `;
-        }
-      } else {
-        // Final fallback
-        reactRoot.innerHTML = `
-          <div style="text-align: center; padding: 40px; color: white;">
-            <h2>Subtitle Extension</h2>
-            <p>Extension loaded but couldn't find App component</p>
-          </div>
-        `;
-      }
-    };
-    script.onerror = function() {
-      if (reactRoot) {
-        reactRoot.innerHTML = `
-          <div style="text-align: center; padding: 40px; color: white;">
-            <h2>Subtitle Extension</h2>
-            <p>Extension loaded but couldn't find App.js</p>
-          </div>
-        `;
-      }
-    };
-    document.head.appendChild(script);
+    console.log('UI elements created and added to DOM');
   }
   
   // Listen for messages from the background script
@@ -235,10 +177,12 @@
     console.log('Message received in content script:', message);
     
     if (message.action === 'toggle_ui') {
-      toggleUI();
+      createAndShowUI();
       sendResponse({ status: 'UI toggled' });
     }
     
     return true; // Keep the message channel open for async response
   });
+
+  console.log('Content script fully initialized, waiting for messages');
 })();
