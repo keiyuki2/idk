@@ -25,7 +25,9 @@
     {
       "resources": [
         "public/js/*.js",
-        "index.html"
+        "index.html",
+        "App.js",
+        "SimpleApp.js"
       ],
       "matches": ["<all_urls>"]
     }
