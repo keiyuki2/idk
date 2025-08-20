@@ -28,28 +28,32 @@ filesToCopy.forEach(file => {
   }
 });
 
-// Create lib folder
-const libFolder = path.join(distFolder, 'lib');
-if (!fs.existsSync(libFolder)) {
-  fs.mkdirSync(libFolder, { recursive: true });
+// Create public/js folder structure
+const publicJsFolder = path.join(distFolder, 'public', 'js');
+if (!fs.existsSync(publicJsFolder)) {
+  fs.mkdirSync(publicJsFolder, { recursive: true });
 }
 
-// Copy lib files
-const libFiles = [
+// Copy all files from public/js
+const jsFiles = [
   'react.production.min.js',
   'react-dom.production.min.js',
-  'gsap.min.js'
+  'gsap.min.js',
+  'react-globals.js',
+  'tailwind.min.js',
+  'tailwind-config.js',
+  'global-vars.js'
 ];
 
-libFiles.forEach(file => {
+jsFiles.forEach(file => {
   try {
     fs.copyFileSync(
-      path.join(__dirname, 'lib', file),
-      path.join(libFolder, file)
+      path.join(__dirname, 'public', 'js', file),
+      path.join(publicJsFolder, file)
     );
-    console.log(`✓ Copied lib/${file}`);
+    console.log(`✓ Copied public/js/${file}`);
   } catch (error) {
-    console.error(`✗ Error copying lib/${file}:`, error.message);
+    console.error(`✗ Error copying public/js/${file}:`, error.message);
   }
 });
 
