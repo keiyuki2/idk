@@ -1,51 +1,108 @@
 // Content script to inject the full-screen subtitle UI
 (function() {
   'use strict';
-
-  // Check if the overlay is already injected
-  if (document.getElementById('subtitle-extension-overlay')) {
-    return;
+  
+  console.log('Subtitle extension content script loaded');
+  
+  // Track if our UI is initialized
+  let isUIInitialized = false;
+  let overlay = null;
+  
+  // Create the UI
+  function createUI() {
+    // Check if the overlay is already injected
+    if (document.getElementById('subtitle-extension-overlay')) {
+      return;
+    }
+  
+    // Create the overlay container
+    overlay = document.createElement('div');
+    overlay.id = 'subtitle-extension-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(20, 20, 20, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+    `;
+  
+    // Create the React root container
+    const reactRoot = document.createElement("div");
+    reactRoot.id = "subtitle-extension-root";
+    reactRoot.style.cssText = `
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+  
+    // Add a loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.style.cssText = `
+      text-align: center;
+      color: white;
+      font-size: 18px;
+    `;
+    loadingIndicator.innerHTML = `
+      <div style="width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); 
+                  border-radius: 50%; border-top-color: white; margin: 0 auto 15px;
+                  animation: spin 1s linear infinite;"></div>
+      <p>Loading subtitle extension...</p>
+    `;
+    
+    // Add the animation
+    const style = document.createElement('style');
+    style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
+    
+    reactRoot.appendChild(loadingIndicator);
+  
+    // Assemble the overlay
+    overlay.appendChild(reactRoot);
+  
+    // Add to page
+    document.body.appendChild(overlay);
+  
+    // Add keyboard escape handler
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && document.getElementById('subtitle-extension-overlay')) {
+        hideUI();
+      }
+    });
+    
+    // Load the extension scripts
+    loadExtensionScripts();
   }
-
-  // Create the overlay container
-  const overlay = document.createElement('div');
-  overlay.id = 'subtitle-extension-overlay';
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(20, 20, 20, 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    z-index: 2147483647;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Inter', sans-serif;
-  `;
-
-  // Create the React root container
-  const reactRoot = document.createElement("div");
-  reactRoot.id = "subtitle-extension-root";
-  reactRoot.style.cssText = `
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  `;
-
-  // Assemble the overlay
-  overlay.appendChild(reactRoot);
-
-  // Add to page
-  document.body.appendChild(overlay);
-
-  // Load the extension scripts
-  loadExtensionScripts();
-
+  
+  // Hide the UI
+  function hideUI() {
+    const overlay = document.getElementById('subtitle-extension-overlay');
+    if (overlay) {
+      overlay.remove();
+      isUIInitialized = false;
+    }
+  }
+  
+  // Toggle the UI
+  function toggleUI() {
+    const existingOverlay = document.getElementById('subtitle-extension-overlay');
+    
+    if (existingOverlay) {
+      hideUI();
+    } else {
+      createUI();
+    }
+  }
+  
   function loadExtensionScripts() {
     const scripts = [
       chrome.runtime.getURL('public/js/tailwind.min.js'),
@@ -56,14 +113,15 @@
       chrome.runtime.getURL('public/js/gsap.min.js'),
       chrome.runtime.getURL('public/js/react-globals.js')
     ];
-
+  
     let loadedCount = 0;
-
+  
     scripts.forEach((src, index) => {
       const script = document.createElement('script');
       script.src = src;
       script.onload = function() {
         loadedCount++;
+        console.log(`Loaded script ${loadedCount}/${scripts.length}: ${src}`);
         if (loadedCount === scripts.length) {
           // All scripts loaded, now load the main app
           loadMainApp();
@@ -75,8 +133,9 @@
       document.head.appendChild(script);
     });
   }
-
+  
   function loadMainApp() {
+    console.log('All dependencies loaded, initializing React app');
     // Wait for React to be ready
     if (window.reactReady) {
       initializeReactApp();
@@ -84,61 +143,90 @@
       window.addEventListener('reactReady', initializeReactApp, { once: true });
     }
   }
-
+  
   function initializeReactApp() {
     const React = window.React;
     const ReactDOM = window.ReactDOM;
-
-    if (!React || !ReactDOM) {
-      reactRoot.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: red;">
-          <h3>Error: React not loaded</h3>
-          <p>Please check the console for errors.</p>
-        </div>
-      `;
+    const reactRoot = document.getElementById('subtitle-extension-root');
+  
+    if (!React || !ReactDOM || !reactRoot) {
+      console.error('React, ReactDOM, or root element not found');
+      if (reactRoot) {
+        reactRoot.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: red;">
+            <h3>Error: React not loaded</h3>
+            <p>Please check the console for errors.</p>
+          </div>
+        `;
+      }
       return;
     }
-
+  
+    console.log('Loading App.js');
     // Load and render the main App component
     const script = document.createElement("script");
     script.src = chrome.runtime.getURL("App.js");
     script.onload = function() {
+      console.log('App.js loaded, rendering React component');
       if (window.App) {
-        const root = ReactDOM.createRoot(reactRoot);
-        root.render(React.createElement(window.App));
+        try {
+          const root = ReactDOM.createRoot(reactRoot);
+          root.render(React.createElement(window.App));
+          console.log('React component rendered successfully');
+          isUIInitialized = true;
+        } catch (error) {
+          console.error('Error rendering React component:', error);
+          reactRoot.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: red;">
+              <h3>Error rendering React component</h3>
+              <p>${error.message}</p>
+            </div>
+          `;
+        }
       } else {
+        console.log('App not found in window, trying import');
         // Import the App component dynamically
         import(chrome.runtime.getURL("App.js")).then(module => {
+          console.log('App.js imported successfully');
           const App = module.default;
           const root = ReactDOM.createRoot(reactRoot);
           root.render(React.createElement(App));
-        }).catch(() => {
+          isUIInitialized = true;
+        }).catch((error) => {
+          console.error('Failed to import App.js:', error);
           // Final fallback
           reactRoot.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
+            <div style="text-align: center; padding: 40px; color: white;">
               <h2>Subtitle Extension</h2>
-              <p>Extension loaded successfully!</p>
+              <p>Extension loaded successfully, but couldn't load App component.</p>
+              <p style="color: red;">Error: ${error.message}</p>
             </div>
           `;
         });
       }
     };
     script.onerror = function() {
-      // Fallback if App.js doesn\'t load
+      console.error('Failed to load App.js');
+      // Fallback if App.js doesn't load
       reactRoot.innerHTML = `
-        <div style="text-align: center; padding: 40px;">
+        <div style="text-align: center; padding: 40px; color: white;">
           <h2>Subtitle Extension</h2>
-          <p>Extension loaded successfully!</p>
+          <p>Extension loaded but couldn't find App.js</p>
         </div>
       `;
     };
     document.head.appendChild(script);
   }
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && document.getElementById('subtitle-extension-overlay')) {
-      overlay.remove();
+  
+  // Listen for messages from the background script
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('Message received in content script:', message);
+    
+    if (message.action === 'toggle_ui') {
+      toggleUI();
+      sendResponse({ status: 'UI toggled' });
     }
+    
+    return true; // Keep the message channel open for async response
   });
-
 })();
-
