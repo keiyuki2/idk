@@ -1,18 +1,22 @@
 chrome.action.onClicked.addListener((tab) => {
   if (tab.id) {
     console.log('Extension icon clicked, sending message to tab:', tab.id);
+    
+    // Try sending a message to the content script first
     chrome.tabs.sendMessage(
       tab.id, 
       { action: 'toggle_ui' },
       (response) => {
+        // If there's an error, the content script might not be loaded
         if (chrome.runtime.lastError) {
           console.error('Error:', chrome.runtime.lastError);
-          // If content script isn't injected yet, inject it
+          
+          // Inject the content script dynamically
           chrome.scripting.executeScript({
             target: { tabId: tab.id },
             files: ['content-script.js']
           }).then(() => {
-            // Try again after injection
+            // Wait a moment for the script to initialize
             setTimeout(() => {
               chrome.tabs.sendMessage(tab.id, { action: 'toggle_ui' });
             }, 100);
