@@ -1,92 +1,153 @@
-// This script runs in the context of the web page
-console.log("Extension content script loaded");
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App'; // Or import SimpleApp from './SimpleApp'; depending on which one you want to use
 
-// Create and inject your UI
-function createUI() {
-  console.log("Creating UI elements");
-  
-  // Create the blur overlay
+// Keep track of whether our UI is currently shown
+let isUIShown = false;
+let rootElement: HTMLElement | null = null;
+let reactRoot: ReactDOM.Root | null = null;
+
+// Create the UI container elements
+function createUIContainer() {
+  // Create the overlay (blurry background)
   const overlay = document.createElement('div');
-  overlay.id = 'my-extension-overlay';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-  overlay.style.backdropFilter = 'blur(5px)';
-  overlay.style.zIndex = '9998';
-  overlay.style.display = 'none';
-  
-  // Create your UI container
-  const container = document.createElement('div');
-  container.id = 'my-extension-ui';
-  container.style.position = 'fixed';
-  container.style.bottom = '0';
-  container.style.left = '0';
-  container.style.width = '100%';
-  container.style.backgroundColor = 'white';
-  container.style.boxShadow = '0 -2px 10px rgba(0, 0, 0, 0.2)';
-  container.style.zIndex = '9999';
-  container.style.padding = '20px';
-  container.style.borderTopLeftRadius = '15px';
-  container.style.borderTopRightRadius = '15px';
-  container.style.display = 'none';
-  
-  // Add your actual UI content
-  container.innerHTML = `
-    <div class="extension-content">
-      <h2>My Extension</h2>
-      <p>This is my extension UI content</p>
-      <!-- Add your UI elements here -->
-    </div>
+  overlay.id = 'subtitle-extension-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(20, 20, 20, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Inter", sans-serif;
   `;
-  
-  // Add to the page
+
+  // Create the white container
+  const content = document.createElement('div');
+  content.id = 'subtitle-extension-content';
+  content.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    position: relative;
+  `;
+
+  // Create a close button
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '×';
+  closeBtn.style.cssText = `
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 30px;
+    cursor: pointer;
+    color: #666;
+    line-height: 1;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+
+  // Create root element for React to render into
+  const root = document.createElement('div');
+  root.id = 'subtitle-extension-root';
+  root.style.cssText = `
+    min-height: 400px;
+    min-width: 600px;
+  `;
+
+  // Add click handler to close button
+  closeBtn.addEventListener('click', hideUI);
+
+  // Assemble the DOM structure
+  content.appendChild(closeBtn);
+  content.appendChild(root);
+  overlay.appendChild(content);
   document.body.appendChild(overlay);
-  document.body.appendChild(container);
-  
-  return { overlay, container };
+
+  // Add keyboard escape handler
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isUIShown) {
+      hideUI();
+    }
+  });
+
+  return root;
 }
 
-// Handle showing/hiding the UI
-function toggleUI() {
-  console.log("Toggling UI");
+// Show the UI
+function showUI() {
+  console.log('Showing UI');
   
-  // Get or create UI elements
-  let overlay = document.getElementById('my-extension-overlay');
-  let container = document.getElementById('my-extension-ui');
-  
-  if (!overlay || !container) {
-    const elements = createUI();
-    overlay = elements.overlay;
-    container = elements.container;
-  }
-  
-  // Toggle visibility
-  if (overlay.style.display === 'none') {
-    overlay.style.display = 'block';
-    container.style.display = 'block';
+  // Create container if it doesn't exist
+  if (!rootElement) {
+    rootElement = createUIContainer();
   } else {
+    // If it exists but was hidden, show it
+    const overlay = document.getElementById('subtitle-extension-overlay');
+    if (overlay) {
+      overlay.style.display = 'flex';
+    }
+  }
+
+  // Render React component if not already rendered
+  if (!reactRoot) {
+    reactRoot = ReactDOM.createRoot(rootElement);
+    reactRoot.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  }
+
+  isUIShown = true;
+}
+
+// Hide the UI
+function hideUI() {
+  console.log('Hiding UI');
+  const overlay = document.getElementById('subtitle-extension-overlay');
+  if (overlay) {
     overlay.style.display = 'none';
-    container.style.display = 'none';
+  }
+  isUIShown = false;
+}
+
+// Toggle the UI visibility
+function toggleUI() {
+  if (isUIShown) {
+    hideUI();
+  } else {
+    showUI();
   }
 }
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("Message received:", message);
+  console.log('Message received:', message);
   
   if (message.action === 'toggle_ui') {
     toggleUI();
+    sendResponse({ status: 'UI toggled' });
   }
   
-  // Acknowledge receipt
-  sendResponse({status: "received"});
+  return true; // Keeps the message channel open for async response
 });
 
-// Initialize UI elements when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-  console.log("DOM loaded, creating initial UI elements");
-  createUI();
-});
+// Initialize when content script loads (optional)
+console.log('Subtitle extension content script loaded');
