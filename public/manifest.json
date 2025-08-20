@@ -26,5 +26,16 @@
   ],
   "host_permissions": [
     "<all_urls>"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/*.js",
+        "App.js",
+        "SimpleApp.js",
+        "public/js/*.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
