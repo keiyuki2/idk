@@ -1,221 +1,213 @@
-// Simple App component for Chrome extension content script
+// App.js - Modified to work directly in the content script environment
 (function() {
   'use strict';
   
+  // Use global React if available
   const React = window.React;
-  
   if (!React) {
     console.error('React not available for App.js');
     return;
   }
   
-  const { useState, useEffect } = React;
+  const { useState } = React;
   
-  // Simple UI component that will be visible on the blurry background
+  // Simple App component for the extension
   window.App = function App() {
-    const [count, setCount] = useState ? useState(0) : [0, () => {}];
-    const [showAdvanced, setShowAdvanced] = useState ? useState(false) : [false, () => {}];
+    const [bgColor, setBgColor] = useState('#000000');
+    const [textColor, setTextColor] = useState('#FFFFFF');
+    const [showSettings, setShowSettings] = useState(true);
     
-    if (!React.createElement) {
-      return React.createElement("div", {
-        style: {
-          color: "red",
-          fontSize: "24px",
-          fontWeight: "bold",
-          padding: "40px",
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          border: "2px solid red",
-          borderRadius: "8px",
-          textAlign: "center"
-        }
-      }, "React createElement not available");
-    }
+    // Function to handle the start button click
+    const handleStart = () => {
+      setShowSettings(false);
+      // Here you would start your actual subtitle processing
+      alert('Live subtitles would start here!');
+    };
     
-    return React.createElement("div", {
+    return React.createElement('div', {
       style: {
-        padding: "30px",
-        backgroundColor: "rgba(255, 255, 255, 0.95)",
-        border: "2px solid #007bff",
-        borderRadius: "12px",
-        maxWidth: "600px",
-        maxHeight: "80vh",
-        overflow: "auto",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "20px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-        backdropFilter: "blur(10px)",
-        color: "#333",
-        fontFamily: "'Inter', sans-serif"
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '30px',
+        maxWidth: '500px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+        position: 'relative'
       }
-    },
-      // Header
-      React.createElement("div", {
+    }, [
+      // Close button
+      React.createElement('button', {
         style: {
-          textAlign: "center",
-          marginBottom: "20px"
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          background: 'none',
+          border: 'none',
+          fontSize: '24px',
+          cursor: 'pointer',
+          color: '#999'
+        },
+        onClick: () => {
+          document.getElementById('subtitle-extension-overlay').remove();
         }
-      },
-        React.createElement("h1", { 
-          style: { 
-            color: "#007bff", 
-            fontSize: "28px",
-            margin: "0 0 10px 0",
-            fontWeight: "600"
-          } 
-        }, "🎙️ Subtitle Extension"),
-        React.createElement("p", { 
-          style: { 
-            fontSize: "16px",
-            color: "#666",
-            margin: "0"
-          } 
-        }, "Real-time subtitle overlay")
-      ),
+      }, '×'),
       
-      // Main content area
-      React.createElement("div", {
+      // Title
+      React.createElement('div', {
         style: {
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: "15px"
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '15px'
         }
-      },
-        // Counter demo
-        React.createElement("div", {
+      }, [
+        React.createElement('span', {
           style: {
-            padding: "20px",
-            backgroundColor: "rgba(240, 248, 255, 0.8)",
-            borderRadius: "8px",
-            textAlign: "center",
-            border: "1px solid #cce7ff"
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: '#007BFF',
+            marginRight: '10px'
           }
-        },
-          React.createElement("p", { 
-            style: { 
-              fontSize: "18px",
-              color: "#333",
-              margin: "0 0 15px 0",
-              fontWeight: "500"
-            } 
-          }, `Demo Counter: ${count}`),
-          React.createElement("button", {
-            onClick: () => setCount(count + 1),
-            style: {
-              padding: "10px 20px",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontSize: "16px",
-              fontWeight: "500",
-              transition: "background-color 0.2s"
-            },
-            onMouseOver: function(e) { e.target.style.backgroundColor = "#0056b3"; },
-            onMouseOut: function(e) { e.target.style.backgroundColor = "#007bff"; }
-          }, "Increment"),
-        ),
-        
-        // Features list
-        React.createElement("div", {
+        }, '🎙️'),
+        React.createElement('h1', {
           style: {
-            padding: "20px",
-            backgroundColor: "rgba(248, 255, 248, 0.8)",
-            borderRadius: "8px",
-            border: "1px solid #ccffcc"
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: '#007BFF',
+            margin: 0
           }
-        },
-          React.createElement("h3", {
-            style: {
-              margin: "0 0 15px 0",
-              color: "#28a745",
-              fontSize: "18px"
-            }
-          }, "✨ Features"),
-          React.createElement("ul", {
-            style: {
-              listStyle: "none",
-              padding: "0",
-              margin: "0",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px"
-            }
-          },
-            React.createElement("li", { style: { color: "#333", fontSize: "14px" } }, "🎯 Real-time subtitle generation"),
-            React.createElement("li", { style: { color: "#333", fontSize: "14px" } }, "🎨 Customizable appearance"),
-            React.createElement("li", { style: { color: "#333", fontSize: "14px" } }, "📱 Responsive design"),
-            React.createElement("li", { style: { color: "#333", fontSize: "14px" } }, "⌨️ Keyboard shortcuts (ESC to close)")
-          )
-        ),
-        
-        // Toggle advanced settings
-        React.createElement("button", {
-          onClick: () => setShowAdvanced(!showAdvanced),
-          style: {
-            padding: "12px 24px",
-            backgroundColor: showAdvanced ? "#6c757d" : "#28a745",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "500",
-            transition: "all 0.2s"
-          }
-        }, showAdvanced ? "Hide Settings" : "Show Settings"),
-        
-        // Advanced settings (conditionally shown)
-        showAdvanced && React.createElement("div", {
-          style: {
-            padding: "20px",
-            backgroundColor: "rgba(255, 248, 240, 0.8)",
-            borderRadius: "8px",
-            border: "1px solid #ffeaa7",
-            animation: "fadeIn 0.3s ease"
-          }
-        },
-          React.createElement("h4", {
-            style: {
-              margin: "0 0 15px 0",
-              color: "#e67e22",
-              fontSize: "16px"
-            }
-          }, "⚙️ Settings Panel"),
-          React.createElement("p", {
-            style: {
-              fontSize: "14px",
-              color: "#666",
-              margin: "0",
-              lineHeight: "1.5"
-            }
-          }, "This is where subtitle customization options would appear. Features like font size, color, position, and speech recognition settings would be available here.")
-        )
-      ),
+        }, 'Subtitle Extension')
+      ]),
       
-      // Footer
-      React.createElement("div", {
+      React.createElement('p', {
         style: {
-          marginTop: "20px",
-          padding: "15px",
-          backgroundColor: "rgba(248, 249, 250, 0.8)",
-          borderRadius: "8px",
-          textAlign: "center",
-          fontSize: "14px",
-          color: "#666",
-          border: "1px solid #e9ecef"
+          color: '#666',
+          marginBottom: '20px'
         }
-      }, 
-        React.createElement("strong", { style: { color: "#28a745" } }, "✅ Extension loaded successfully!"),
-        React.createElement("br"),
-        "Press ESC to close this overlay"
-      )
-    );
+      }, 'Real-time subtitle overlay'),
+      
+      // Preview box
+      React.createElement('div', {
+        style: {
+          backgroundColor: bgColor,
+          padding: '15px',
+          borderRadius: '6px',
+          marginBottom: '20px'
+        }
+      }, React.createElement('p', {
+        style: {
+          margin: 0,
+          color: textColor
+        }
+      }, 'This is what your subtitles will look like. Adjust the settings to see the changes live.')),
+      
+      // Settings section - shown conditionally
+      showSettings && React.createElement('div', null, [
+        React.createElement('h2', {
+          style: {
+            fontSize: '16px',
+            marginBottom: '10px'
+          }
+        }, 'Settings'),
+        
+        // Background color
+        React.createElement('div', {
+          style: {
+            marginBottom: '15px'
+          }
+        }, [
+          React.createElement('label', {
+            style: {
+              display: 'block',
+              marginBottom: '5px'
+            }
+          }, 'Background Color'),
+          React.createElement('div', {
+            style: {
+              display: 'flex',
+              gap: '10px'
+            }
+          }, [
+            ['#000000', '#333333', '#0057b7'].map(color => 
+              React.createElement('button', {
+                key: color,
+                style: {
+                  width: '30px',
+                  height: '30px',
+                  background: color,
+                  border: color === bgColor ? '2px solid #007BFF' : '2px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                },
+                onClick: () => setBgColor(color)
+              })
+            )
+          ])
+        ]),
+        
+        // Text color
+        React.createElement('div', {
+          style: {
+            marginBottom: '20px'
+          }
+        }, [
+          React.createElement('label', {
+            style: {
+              display: 'block',
+              marginBottom: '5px'
+            }
+          }, 'Text Color'),
+          React.createElement('div', {
+            style: {
+              display: 'flex',
+              gap: '10px'
+            }
+          }, [
+            ['#FFFFFF', '#FFFF00', '#00FF00'].map(color => 
+              React.createElement('button', {
+                key: color,
+                style: {
+                  width: '30px',
+                  height: '30px',
+                  background: color,
+                  border: color === textColor ? '2px solid #007BFF' : '2px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                },
+                onClick: () => setTextColor(color)
+              })
+            )
+          ])
+        ])
+      ]),
+      
+      // Start button or Stop button depending on state
+      React.createElement('button', {
+        style: {
+          backgroundColor: showSettings ? '#007BFF' : '#dc3545',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          padding: '12px',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          width: '100%',
+          cursor: 'pointer'
+        },
+        onMouseOver: (e) => {
+          e.currentTarget.style.backgroundColor = showSettings ? '#0069d9' : '#c82333';
+        },
+        onMouseOut: (e) => {
+          e.currentTarget.style.backgroundColor = showSettings ? '#007BFF' : '#dc3545';
+        },
+        onClick: () => {
+          if (showSettings) {
+            handleStart();
+          } else {
+            setShowSettings(true);
+          }
+        }
+      }, showSettings ? 'Start Live Subtitles' : 'Stop Live Subtitles')
+    ]);
   };
   
-  console.log('App.js loaded and window.App is available');
+  console.log('App.js loaded successfully and window.App is available');
 })();
