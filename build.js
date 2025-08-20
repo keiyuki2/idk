@@ -28,6 +28,31 @@ filesToCopy.forEach(file => {
   }
 });
 
+// Create lib folder
+const libFolder = path.join(distFolder, 'lib');
+if (!fs.existsSync(libFolder)) {
+  fs.mkdirSync(libFolder, { recursive: true });
+}
+
+// Copy lib files
+const libFiles = [
+  'react.production.min.js',
+  'react-dom.production.min.js',
+  'gsap.min.js'
+];
+
+libFiles.forEach(file => {
+  try {
+    fs.copyFileSync(
+      path.join(__dirname, 'lib', file),
+      path.join(libFolder, file)
+    );
+    console.log(`✓ Copied lib/${file}`);
+  } catch (error) {
+    console.error(`✗ Error copying lib/${file}:`, error.message);
+  }
+});
+
 // Create icons folder if needed
 const iconsFolder = path.join(distFolder, 'icons');
 if (!fs.existsSync(iconsFolder)) {
