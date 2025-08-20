@@ -16,7 +16,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["content-script.js"]
     }
   ],
   "permissions": [
@@ -33,9 +33,7 @@
         "public/js/*.js",
         "index.html",
         "App.js",
-        "SimpleApp.js",
-        "react.js",
-        "react-dom.js"
+        "SimpleApp.js"
       ],
       "matches": ["<all_urls>"]
     }
