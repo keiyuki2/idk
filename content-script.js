@@ -4,9 +4,24 @@
   
   console.log('Subtitle extension content script loaded');
   
-  // Track if our UI is initialized
-  let isUIInitialized = false;
-  let overlay = null;
+  // Keep track of UI state
+  let isUIVisible = false;
+  
+  // Toggle the UI
+  function toggleUI() {
+    const overlay = document.getElementById('subtitle-extension-overlay');
+    
+    // Remove existing UI if it exists
+    if (overlay) {
+      overlay.remove();
+      isUIVisible = false;
+      return;
+    }
+    
+    // Otherwise create the UI
+    createUI();
+    isUIVisible = true;
+  }
   
   // Create the UI
   function createUI() {
@@ -16,7 +31,7 @@
     }
   
     // Create the overlay container
-    overlay = document.createElement('div');
+    const overlay = document.createElement('div');
     overlay.id = 'subtitle-extension-overlay';
     overlay.style.cssText = `
       position: fixed;
@@ -75,32 +90,12 @@
     // Add keyboard escape handler
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && document.getElementById('subtitle-extension-overlay')) {
-        hideUI();
+        toggleUI();
       }
     });
     
     // Load the extension scripts
     loadExtensionScripts();
-  }
-  
-  // Hide the UI
-  function hideUI() {
-    const overlay = document.getElementById('subtitle-extension-overlay');
-    if (overlay) {
-      overlay.remove();
-      isUIInitialized = false;
-    }
-  }
-  
-  // Toggle the UI
-  function toggleUI() {
-    const existingOverlay = document.getElementById('subtitle-extension-overlay');
-    
-    if (existingOverlay) {
-      hideUI();
-    } else {
-      createUI();
-    }
   }
   
   function loadExtensionScripts() {
@@ -163,7 +158,37 @@
     }
   
     console.log('Loading App.js');
-    // Load and render the main App component
+    // First try SimpleApp.js which is simpler and might be more reliable for testing
+    const script = document.createElement("script");
+    script.src = chrome.runtime.getURL("SimpleApp.js");
+    script.onload = function() {
+      console.log('SimpleApp.js loaded, trying to render');
+      if (window.SimpleApp) {
+        try {
+          const root = ReactDOM.createRoot(reactRoot);
+          root.render(React.createElement(window.SimpleApp));
+          console.log('SimpleApp rendered successfully');
+        } catch (error) {
+          console.error('Error rendering SimpleApp:', error);
+          // Fallback to App.js
+          loadAppJS();
+        }
+      } else {
+        console.log('SimpleApp not found, trying App.js');
+        loadAppJS();
+      }
+    };
+    script.onerror = function() {
+      console.error('Failed to load SimpleApp.js');
+      loadAppJS();
+    };
+    document.head.appendChild(script);
+  }
+  
+  function loadAppJS() {
+    const reactRoot = document.getElementById('subtitle-extension-root');
+    if (!reactRoot) return;
+    
     const script = document.createElement("script");
     script.src = chrome.runtime.getURL("App.js");
     script.onload = function() {
@@ -172,48 +197,35 @@
         try {
           const root = ReactDOM.createRoot(reactRoot);
           root.render(React.createElement(window.App));
-          console.log('React component rendered successfully');
-          isUIInitialized = true;
+          console.log('App component rendered successfully');
         } catch (error) {
-          console.error('Error rendering React component:', error);
+          console.error('Error rendering App component:', error);
           reactRoot.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: red;">
-              <h3>Error rendering React component</h3>
-              <p>${error.message}</p>
+            <div style="text-align: center; padding: 40px; color: white;">
+              <h2>Subtitle Extension</h2>
+              <p style="color: red;">Error loading component: ${error.message}</p>
             </div>
           `;
         }
       } else {
-        console.log('App not found in window, trying import');
-        // Import the App component dynamically
-        import(chrome.runtime.getURL("App.js")).then(module => {
-          console.log('App.js imported successfully');
-          const App = module.default;
-          const root = ReactDOM.createRoot(reactRoot);
-          root.render(React.createElement(App));
-          isUIInitialized = true;
-        }).catch((error) => {
-          console.error('Failed to import App.js:', error);
-          // Final fallback
-          reactRoot.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: white;">
-              <h2>Subtitle Extension</h2>
-              <p>Extension loaded successfully, but couldn't load App component.</p>
-              <p style="color: red;">Error: ${error.message}</p>
-            </div>
-          `;
-        });
+        // Final fallback
+        reactRoot.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: white;">
+            <h2>Subtitle Extension</h2>
+            <p>Extension loaded but couldn't find App component</p>
+          </div>
+        `;
       }
     };
     script.onerror = function() {
-      console.error('Failed to load App.js');
-      // Fallback if App.js doesn't load
-      reactRoot.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: white;">
-          <h2>Subtitle Extension</h2>
-          <p>Extension loaded but couldn't find App.js</p>
-        </div>
-      `;
+      if (reactRoot) {
+        reactRoot.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: white;">
+            <h2>Subtitle Extension</h2>
+            <p>Extension loaded but couldn't find App.js</p>
+          </div>
+        `;
+      }
     };
     document.head.appendChild(script);
   }
