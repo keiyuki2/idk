@@ -1,42 +1,44 @@
-// Ensure React and ReactDOM are available globally
+// This script creates a global event to signal when React is ready
 (function() {
-  // Wait for scripts to load and set up globals
-  function waitForReact() {
-    return new Promise((resolve) => {
-      const checkReact = () => {
-        if (window.React && window.ReactDOM) {
-          console.log('React and ReactDOM are available');
-          resolve();
-        } else {
-          console.log('Waiting for React and ReactDOM...');
-          setTimeout(checkReact, 100);
-        }
-      };
-      checkReact();
-    });
-  }
-
-  // Initialize when React is ready
-  window.initReactApp = async function() {
-    await waitForReact();
-    
-    // Wait for fonts to load
-    if (document.fonts && document.fonts.ready) {
-      await document.fonts.ready;
+  'use strict';
+  
+  console.log('React globals script loaded');
+  
+  // Check if both React and ReactDOM are loaded
+  const checkReactReady = () => {
+    if (window.React && window.ReactDOM) {
+      console.log('React and ReactDOM are ready');
+      
+      // Create and dispatch the custom event
+      const event = new CustomEvent('reactReady');
+      window.reactReady = true;
+      window.dispatchEvent(event);
     }
-    
-    // Signal that React is ready
-    window.reactReady = true;
-    
-    // Dispatch custom event
-    window.dispatchEvent(new CustomEvent('reactReady'));
   };
-
-  // Start initialization
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', window.initReactApp);
-  } else {
-    window.initReactApp();
-  }
+  
+  // Check immediately
+  checkReactReady();
+  
+  // Also set up an interval to check repeatedly (in case scripts load out of order)
+  const checkInterval = setInterval(() => {
+    if (window.React && window.ReactDOM) {
+      console.log('React and ReactDOM are now ready');
+      window.reactReady = true;
+      
+      // Create and dispatch the custom event
+      const event = new CustomEvent('reactReady');
+      window.dispatchEvent(event);
+      
+      // Clear the interval
+      clearInterval(checkInterval);
+    }
+  }, 100);
+  
+  // Stop checking after 5 seconds
+  setTimeout(() => {
+    clearInterval(checkInterval);
+    if (!window.reactReady) {
+      console.error('React or ReactDOM failed to load within 5 seconds');
+    }
+  }, 5000);
 })();
-
