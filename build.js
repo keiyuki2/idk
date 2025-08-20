@@ -27,52 +27,82 @@ rootFilesToCopy.forEach(file => {
   }
 });
 
-// Copy public folder contents
-const publicSrcPath = path.join(__dirname, 'public');
-const publicDestPath = path.join(distFolder, 'public');
+// Copy public/js folder contents
+const jsSrcPath = path.join(__dirname, 'public', 'js');
+const jsDestPath = path.join(distFolder, 'public', 'js');
 
-// Recursive function to copy a directory
-function copyDir(src, dest) {
-  // Create destination directory if it doesn't exist
-  if (!fs.existsSync(dest)) {
-    fs.mkdirSync(dest, { recursive: true });
-  }
-  
-  // Get all files in the source directory
-  const entries = fs.readdirSync(src, { withFileTypes: true });
-  
-  // Copy each entry (file or directory)
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    
-    if (entry.isDirectory()) {
-      // Recursively copy directories
-      copyDir(srcPath, destPath);
-    } else {
-      // Copy files
-      fs.copyFileSync(srcPath, destPath);
-      console.log(`✓ Copied ${path.relative(__dirname, srcPath)} to ${path.relative(__dirname, destPath)}`);
-    }
-  }
+// Create public/js folder in dist
+if (!fs.existsSync(jsDestPath)) {
+  fs.mkdirSync(jsDestPath, { recursive: true });
 }
 
-// Copy the entire public directory
+// Copy JS files
 try {
-  copyDir(publicSrcPath, publicDestPath);
+  const jsFiles = fs.readdirSync(jsSrcPath);
+  for (const file of jsFiles) {
+    const srcPath = path.join(jsSrcPath, file);
+    const destPath = path.join(jsDestPath, file);
+    
+    if (fs.statSync(srcPath).isFile()) {
+      fs.copyFileSync(srcPath, destPath);
+      console.log(`✓ Copied public/js/${file}`);
+    }
+  }
 } catch (error) {
-  console.error(`✗ Error copying public folder:`, error.message);
+  console.error(`✗ Error copying public/js folder:`, error.message);
+}
+
+// Copy icons to dist/icons folder (not under public)
+const iconsSrcPath = path.join(__dirname, 'public', 'icons');
+const iconsDestPath = path.join(distFolder, 'icons');
+
+// Create icons folder in dist
+if (!fs.existsSync(iconsDestPath)) {
+  fs.mkdirSync(iconsDestPath, { recursive: true });
+}
+
+// Copy icon files
+try {
+  const iconFiles = fs.readdirSync(iconsSrcPath);
+  for (const file of iconFiles) {
+    const srcPath = path.join(iconsSrcPath, file);
+    const destPath = path.join(iconsDestPath, file);
+    
+    if (fs.statSync(srcPath).isFile()) {
+      fs.copyFileSync(srcPath, destPath);
+      console.log(`✓ Copied icons/${file}`);
+    }
+  }
+} catch (error) {
+  console.error(`✗ Error copying icons folder:`, error.message);
 }
 
 // Copy manifest.json to root of dist
 try {
-  fs.copyFileSync(
-    path.join(__dirname, 'public', 'manifest.json'),
-    path.join(distFolder, 'manifest.json')
+  // Read the manifest file
+  let manifest = JSON.parse(fs.readFileSync(
+    path.join(__dirname, 'public', 'manifest.json'), 
+    'utf8'
+  ));
+  
+  // Fix icon paths if needed
+  if (manifest.action && manifest.action.default_icon) {
+    const iconPaths = manifest.action.default_icon;
+    for (const size in iconPaths) {
+      if (iconPaths[size].startsWith('public/icons/')) {
+        iconPaths[size] = iconPaths[size].replace('public/icons/', 'icons/');
+      }
+    }
+  }
+  
+  // Write updated manifest to dist
+  fs.writeFileSync(
+    path.join(distFolder, 'manifest.json'),
+    JSON.stringify(manifest, null, 2)
   );
-  console.log(`✓ Copied manifest.json to dist root`);
+  console.log(`✓ Copied and updated manifest.json to dist root`);
 } catch (error) {
-  console.error(`✗ Error copying manifest.json:`, error.message);
+  console.error(`✗ Error updating manifest.json:`, error.message);
 }
 
 console.log('Build completed successfully!');
