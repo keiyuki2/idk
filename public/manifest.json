@@ -30,10 +30,9 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "lib/*.js",
+        "public/js/*.js",
         "App.js",
-        "SimpleApp.js",
-        "public/js/*.js"
+        "SimpleApp.js"
       ],
       "matches": ["<all_urls>"]
     }
