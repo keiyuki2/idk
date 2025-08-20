@@ -7,26 +7,26 @@ if (!fs.existsSync(distFolder)) {
   fs.mkdirSync(distFolder, { recursive: true });
 }
 
-// Copy manifest.json
-fs.copyFileSync(
-  path.join(__dirname, 'manifest.json'),
-  path.join(distFolder, 'manifest.json')
-);
-console.log('✓ Copied manifest.json');
+// Files to copy directly
+const filesToCopy = [
+  'manifest.json',
+  'background.js',
+  'content-script.js',
+  'App.js'
+];
 
-// Copy background.js
-fs.copyFileSync(
-  path.join(__dirname, 'background.js'),
-  path.join(distFolder, 'background.js')
-);
-console.log('✓ Copied background.js');
-
-// Copy content-script.js
-fs.copyFileSync(
-  path.join(__dirname, 'content-script.js'),
-  path.join(distFolder, 'content-script.js')
-);
-console.log('✓ Copied content-script.js');
+// Copy each file
+filesToCopy.forEach(file => {
+  try {
+    fs.copyFileSync(
+      path.join(__dirname, file),
+      path.join(distFolder, file)
+    );
+    console.log(`✓ Copied ${file}`);
+  } catch (error) {
+    console.error(`✗ Error copying ${file}:`, error.message);
+  }
+});
 
 // Create icons folder if needed
 const iconsFolder = path.join(distFolder, 'icons');
@@ -36,7 +36,7 @@ if (!fs.existsSync(iconsFolder)) {
 
 // Copy icons if they exist
 const iconSizes = [16, 48, 128];
-for (const size of iconSizes) {
+iconSizes.forEach(size => {
   const iconFile = `icon${size}.png`;
   const srcPath = path.join(__dirname, 'icons', iconFile);
   const destPath = path.join(iconsFolder, iconFile);
@@ -45,19 +45,8 @@ for (const size of iconSizes) {
     fs.copyFileSync(srcPath, destPath);
     console.log(`✓ Copied ${iconFile}`);
   } else {
-    console.log(`! Icon ${iconFile} not found, creating a placeholder`);
-    
-    // Create a simple colored square as placeholder
-    const placeholderPath = path.join(__dirname, 'dist', 'icons', iconFile);
-    try {
-      // You would need a library to create actual PNG files, 
-      // but for simplicity, we'll just create an empty file as a placeholder
-      fs.writeFileSync(destPath, '');
-      console.log(`  Created placeholder for ${iconFile}`);
-    } catch (err) {
-      console.error(`  Failed to create placeholder for ${iconFile}`, err);
-    }
+    console.log(`! Icon ${iconFile} not found`);
   }
-}
+});
 
 console.log('Build completed successfully!');
