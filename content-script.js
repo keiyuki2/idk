@@ -88,9 +88,9 @@
   function loadDependencies() {
     // List all required scripts in order they need to be loaded
     const scripts = [
-      { name: 'React', url: 'https://unpkg.com/react@18/umd/react.production.min.js' },
-      { name: 'ReactDOM', url: 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js' },
-      { name: 'GSAP', url: 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js' },
+      { name: 'React', url: chrome.runtime.getURL('lib/react.production.min.js') },
+      { name: 'ReactDOM', url: chrome.runtime.getURL('lib/react-dom.production.min.js') },
+      { name: 'GSAP', url: chrome.runtime.getURL('lib/gsap.min.js') },
       { name: 'App', url: chrome.runtime.getURL('App.js') }
     ];
 
@@ -157,20 +157,18 @@
     try {
       console.log('Checking for App component...');
       
-      // Check if we have the App component (either global or in module)
-      if (window.App) {
-        console.log('Found global App component, rendering');
-        const root = window.ReactDOM.createRoot(reactRoot);
-        root.render(window.React.createElement(window.App));
-      } else {
-        console.error('App component not found');
-        // Show a simplified UI as fallback
-        renderSimplifiedUI(reactRoot);
-      }
+      // Try to render the SimpleApp without requiring App.js
+      renderSimplifiedUI(reactRoot);
+      
     } catch (error) {
       console.error('Error rendering App:', error);
       // Show a simplified UI as fallback
-      renderSimplifiedUI(reactRoot);
+      reactRoot.innerHTML = `
+        <div style="background: white; padding: 30px; border-radius: 12px; text-align: center;">
+          <h2>Subtitle Extension</h2>
+          <p>Sorry, there was an error loading the UI: ${error.message}</p>
+        </div>
+      `;
     }
   }
   
@@ -248,14 +246,15 @@
         // Preview box
         React.createElement('div', {
           style: {
-            backgroundColor: '#f8f9fa',
+            backgroundColor: bgColor,
             padding: '15px',
             borderRadius: '6px',
             marginBottom: '20px'
           }
         }, React.createElement('p', {
           style: {
-            margin: 0
+            margin: 0,
+            color: textColor
           }
         }, 'This is what your subtitles will look like. Adjust the settings to see the changes live.')),
         
