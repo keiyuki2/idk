@@ -88,9 +88,10 @@
   function loadDependencies() {
     // List all required scripts in order they need to be loaded
     const scripts = [
-      { name: 'React', url: chrome.runtime.getURL('lib/react.production.min.js') },
-      { name: 'ReactDOM', url: chrome.runtime.getURL('lib/react-dom.production.min.js') },
-      { name: 'GSAP', url: chrome.runtime.getURL('lib/gsap.min.js') },
+      { name: 'React', url: chrome.runtime.getURL('public/js/react.production.min.js') },
+      { name: 'ReactDOM', url: chrome.runtime.getURL('public/js/react-dom.production.min.js') },
+      { name: 'GSAP', url: chrome.runtime.getURL('public/js/gsap.min.js') },
+      { name: 'ReactGlobals', url: chrome.runtime.getURL('public/js/react-globals.js') },
       { name: 'App', url: chrome.runtime.getURL('App.js') }
     ];
 
@@ -157,8 +158,14 @@
     try {
       console.log('Checking for App component...');
       
-      // Try to render the SimpleApp without requiring App.js
-      renderSimplifiedUI(reactRoot);
+      if (window.App) {
+        console.log('Found App component, rendering');
+        const root = window.ReactDOM.createRoot(reactRoot);
+        root.render(window.React.createElement(window.App));
+      } else {
+        console.log('App component not found, using SimpleApp');
+        renderSimplifiedUI(reactRoot);
+      }
       
     } catch (error) {
       console.error('Error rendering App:', error);
